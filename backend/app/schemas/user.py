@@ -1,9 +1,12 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.models.enums import UserRole
+
 class UserBase(BaseModel):
     display_name: str
     email: EmailStr
+    role: UserRole = UserRole.AM
     teams_user_id: str | None = None
     position: str | None = None
     unit: str | None = None
@@ -18,6 +21,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     display_name: str | None = None
+    role: UserRole | None = None
     teams_user_id: str | None = None
     position: str | None = None
     unit: str | None = None

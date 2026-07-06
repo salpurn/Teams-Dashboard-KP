@@ -13,7 +13,7 @@ class Notification(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     project_id: Mapped[int | None] = mapped_column(ForeignKey("projects.id"), nullable=True, index=True)
-    review_task_id: Mapped[int | None] = mapped_column(ForeignKey("review_tasks.id"), nullable=True)
+    project_step_id: Mapped[int | None] = mapped_column(ForeignKey("project_steps.id"), nullable=True)
     type: Mapped[str] = mapped_column(String(80), index=True)
     title: Mapped[str] = mapped_column(String(180))
     body: Mapped[str] = mapped_column(Text)
@@ -26,7 +26,7 @@ class Notification(Base):
 
     user = relationship("User")
     project = relationship("Project")
-    review_task = relationship("ReviewTask")
+    project_step = relationship("ProjectStep")
 
 
 class DeviceToken(Base):

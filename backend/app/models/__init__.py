@@ -4,8 +4,7 @@ from app.models.audit import AuditEvent
 from app.models.message import TeamsMessage
 from app.models.notification import DeviceToken, Notification
 from app.models.project import Project, ProjectDocument
-from app.models.review_level import ReviewLevel
-from app.models.review_task import ReviewTask
+from app.models.project_step import ProjectStep
 from app.models.setting import SystemSetting
 from app.models.user import User
 
@@ -17,8 +16,7 @@ __all__ = [
     "Notification",
     "Project",
     "ProjectDocument",
-    "ReviewLevel",
-    "ReviewTask",
+    "ProjectStep",
     "SystemSetting",
     "TeamsMessage",
     "User",

@@ -12,7 +12,7 @@ class AuditEvent(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), index=True)
     actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    review_task_id: Mapped[int | None] = mapped_column(ForeignKey("review_tasks.id"), nullable=True)
+    project_step_id: Mapped[int | None] = mapped_column(ForeignKey("project_steps.id"), nullable=True)
     event_type: Mapped[str] = mapped_column(String(80), index=True)
     title: Mapped[str] = mapped_column(String(180))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -20,4 +20,4 @@ class AuditEvent(Base):
 
     project = relationship("Project", back_populates="audit_events")
     actor = relationship("User")
-    review_task = relationship("ReviewTask")
+    project_step = relationship("ProjectStep")
