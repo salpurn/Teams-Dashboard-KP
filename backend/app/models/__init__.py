@@ -7,8 +7,10 @@ from app.models.project import Project, ProjectDocument
 from app.models.project_step import ProjectStep
 from app.models.setting import SystemSetting
 from app.models.user import User
+from app.models.available_file import AvailableFile
 
 __all__ = [
+    "AvailableFile",
     "AuditEvent",
     "DeviceToken",
     "MessageAssignment",

@@ -13,6 +13,7 @@ from app.models.notification import DeviceToken, Notification
 from app.models.project import Project, ProjectDocument
 from app.models.project_step import ProjectStep
 from app.models.user import User
+from app.models.available_file import AvailableFile
 from app.schemas.tracker import (
     DeviceTokenCreate,
     FeProject,
@@ -23,6 +24,7 @@ from app.schemas.tracker import (
     ReviewDecisionCreate,
     SlaSetting,
     TestPushNotificationCreate,
+    AvailableFileSchema,
 )
 from app.services.tracker_service import (
     create_project,
@@ -231,3 +233,9 @@ def create_device_token(payload: DeviceTokenCreate, db: Session = Depends(get_db
 @router.post("/notifications/test", response_model=NotificationRead, status_code=status.HTTP_201_CREATED)
 def send_test_notification(payload: TestPushNotificationCreate, db: Session = Depends(get_db)) -> Notification:
     return create_test_notification(db, payload)
+
+
+@router.get("/available-files", response_model=list[AvailableFileSchema])
+def list_available_files(db: Session = Depends(get_db)) -> list[AvailableFile]:
+    statement = select(AvailableFile).order_by(AvailableFile.id.asc())
+    return list(db.scalars(statement).all())
