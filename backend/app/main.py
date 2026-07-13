@@ -9,8 +9,7 @@ def create_app() -> FastAPI:
     Base.metadata.create_all(bind=engine)
 
     app = FastAPI(title=settings.app_name)
-    # Frontend statis (file:// atau live-server port beda) manggil API ini dari origin lain.
-    # Tidak ada cookie/session, jadi allow_origins longgar aman untuk dev lokal.
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

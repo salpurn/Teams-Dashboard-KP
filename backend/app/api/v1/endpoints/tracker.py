@@ -1,9 +1,7 @@
 from datetime import UTC, datetime
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session, selectinload
-
 from app.core.funnel import FUNNEL_PHASES, FUNNEL_STEP_BY_CODE
 from app.db.session import get_db
 from app.models.audit import AuditEvent
@@ -40,7 +38,6 @@ from app.services.tracker_service import (
 )
 
 router = APIRouter()
-
 
 @router.get("/funnel", response_model=list[FunnelPhaseInfo])
 def read_funnel_catalog() -> list[FunnelPhaseInfo]:

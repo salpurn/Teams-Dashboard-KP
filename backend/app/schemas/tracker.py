@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.enums import (
@@ -13,7 +12,6 @@ from app.models.enums import (
     UserRole,
 )
 
-
 class FunnelStepInfo(BaseModel):
     """Katalog step funnel (hardcode, dari app.core.funnel) - read-only, bukan CRUD."""
 
@@ -24,13 +22,11 @@ class FunnelStepInfo(BaseModel):
     responsibleRoles: list[UserRole]
     isCancellationGate: bool
 
-
 class FunnelPhaseInfo(BaseModel):
     phase: FunnelPhase
     name: str
     description: str
     steps: list[FunnelStepInfo]
-
 
 class ProjectDocumentCreate(BaseModel):
     """Metadata attachment mentah dari Teams/SharePoint (dipakai internal saat intake webhook,
@@ -44,7 +40,6 @@ class ProjectDocumentCreate(BaseModel):
     step_code: FunnelStepCode | None = None
     is_primary: bool = False
 
-
 class ProjectCreate(BaseModel):
     title: str
     client_name: str
@@ -57,15 +52,10 @@ class ProjectCreate(BaseModel):
     notes: str | None = None
     documents: list[ProjectDocumentCreate] = Field(default_factory=list)
 
-
-# --- Kontrak FE: nama field persis sama dengan objek `projects[]` di r-legs-tracking, ---
-# --- tapi datanya asli dari backend, bukan mockData.js/localStorage.                  ---
-
-
 class FeCustodian(BaseModel):
     name: str
-    role: str  # label manusiawi (dari User.position), mis. "Account Manager"
-    dept: str | None  # dari User.unit
+    role: str
+    dept: str | None
     email: str
     avatar: str  # placeholder ui-avatars.com dari inisial nama - backend tidak simpan foto asli
     roleCode: UserRole  # AM/BUD/SDA/LEGAL/MANAGER - dipakai FE buat permission check
@@ -94,7 +84,7 @@ class FeHistoryEntry(BaseModel):
 class FeProject(BaseModel):
     """Bentuk project persis seperti objek `projects[]` di frontend, sumber data backend."""
 
-    id: str  # project_code - dipakai FE sebagai key & URL hash (#details/{id})
+    id: str
     name: str
     client: str
     am: str

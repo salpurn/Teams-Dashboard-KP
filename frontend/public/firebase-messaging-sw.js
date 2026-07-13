@@ -1,13 +1,3 @@
-// Service worker Firebase Cloud Messaging: menangani notifikasi push saat tab browser
-// tidak aktif/di-background. Berkas ini disajikan apa adanya oleh Vite (folder public/),
-// jadi config Firebase di-hardcode langsung di sini (nilainya memang publik, bukan secret,
-// diproteksi oleh Firebase Security Rules bukan oleh kerahasiaan config).
-//
-// Isi nilai di bawah dengan config yang sama seperti di frontend/.env
-// (VITE_FIREBASE_*), lalu jaga tetap sinkron kalau config berubah.
-// Di-host lokal (bukan dari CDN gstatic.com) karena fetch/importScripts dari
-// konteks Service Worker sering diblokir oleh proxy/firewall jaringan korporat
-// meski akses langsung dari tab browser tetap berhasil.
 importScripts("/firebase-app-compat.js");
 importScripts("/firebase-messaging-compat.js");
 

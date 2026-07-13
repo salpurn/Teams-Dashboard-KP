@@ -2,13 +2,11 @@ import hashlib
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate, UserLogin
 
 router = APIRouter()
-
 
 @router.get("", response_model=list[UserRead])
 def list_users(
