@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { STAGE_FLOW, USERS_ROLE } from '../utils/mockData';
+import { STAGE_FLOW } from '../utils/mockData';
 
-export default function ProjectDetail({ project, currentUserRole, onBack, onDocumentAction, onUploadDocument, openFilePicker }) {
+export default function ProjectDetail({ project, loggedInUser, currentUserRole, onBack, onDocumentAction, onUploadDocument, openFilePicker }) {
   const [selectedPhase, setSelectedPhase] = useState(project.currentPhase);
   const [selectedDocCode, setSelectedDocCode] = useState(project.currentStep);
   const [zoom, setZoom] = useState(100);
@@ -67,18 +67,6 @@ export default function ProjectDetail({ project, currentUserRole, onBack, onDocu
     return () => clearInterval(interval);
   }, [project]);
 
-  const getCustodianEmail = (name) => {
-    if (!name) return 'support@telkom.co.id';
-    const cleanName = name
-      .toLowerCase()
-      .replace(/, s\.h\./g, '')
-      .replace(/, m\.b\.a\./g, '')
-      .replace(/\./g, '')
-      .trim()
-      .replace(/\s+/g, '.');
-    return `${cleanName}@telkom.co.id`;
-  };
-
   const formatDate = (isoString) => {
     if (!isoString) return '-';
     const date = new Date(isoString);
@@ -113,25 +101,24 @@ export default function ProjectDetail({ project, currentUserRole, onBack, onDocu
 
   // Hitung hak akses verifikasi/upload
   const isCurrentStep = project.currentStep === selectedDoc.code;
-  const currentUser = USERS_ROLE[currentUserRole] || USERS_ROLE.AM;
-  const isExactCustodian = currentUser && project.custodian && project.custodian.name === currentUser.name;
+  const isExactCustodian = loggedInUser && project.custodian && project.custodian.email === loggedInUser.email;
 
   let hasRightToApprove = false;
   if (isExactCustodian && isCurrentStep && project.currentStep !== 'P9') {
-    if (currentUserRole.startsWith('MANAGER')) {
+    if (currentUserRole === 'MANAGER') {
       hasRightToApprove = false;
     } else if (project.currentStep === 'P1' || project.currentStep === 'P6' || project.currentStep === 'BAST' || project.currentStep === 'BASO') {
-      hasRightToApprove = currentUserRole.startsWith('AM');
+      hasRightToApprove = (currentUserRole === 'AM');
     } else if (project.currentStep === 'PA') {
-      hasRightToApprove = currentUserRole.startsWith('SDA');
+      hasRightToApprove = (currentUserRole === 'SDA');
     } else if (project.currentStep === 'KL') {
-      hasRightToApprove = currentUserRole.startsWith('LEGAL');
+      hasRightToApprove = (currentUserRole === 'LEGAL');
     } else {
-      hasRightToApprove = currentUserRole.startsWith('BUD');
+      hasRightToApprove = (currentUserRole === 'BUD');
     }
 
     if (selectedDoc.code === 'SPH' || selectedDoc.code === 'SKM') {
-      hasRightToApprove = currentUserRole.startsWith('AM') || currentUserRole.startsWith('BUD');
+      hasRightToApprove = (currentUserRole === 'AM' || currentUserRole === 'BUD');
     }
   }
 
@@ -148,7 +135,7 @@ export default function ProjectDetail({ project, currentUserRole, onBack, onDocu
   };
 
   // Nudge via Teams
-  const email = getCustodianEmail(project.custodian?.name);
+  const email = project.custodian?.email;
   const nudgeMsg = `Halo ${project.custodian?.name || ''}, mohon tindak lanjut untuk berkas "${activeStepDoc.name}" pada proyek "${project.name}" (${project.client}) yang saat ini sedang tertahan. Terima kasih!`;
   const teamsLink = `https://teams.microsoft.com/l/chat/0/0?users=${email}&message=${encodeURIComponent(nudgeMsg)}`;
   const basoDoc = project.documents.find((d) => d.code === 'BASO');

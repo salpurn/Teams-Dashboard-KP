@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { USERS_ROLE } from './utils/mockData';
 import Sidebar from './components/Sidebar';
 import MetricCards from './components/MetricCards';
 import ActiveTasks from './components/ActiveTasks';
@@ -12,51 +11,6 @@ import Login from './components/Login';
 import ProfilePage from './components/ProfilePage';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
-
-const ROLE_EMAILS = {
-  AM: 'budi.santoso@telkom.co.id',
-  AM_SITI: 'siti.aminah@telkom.co.id',
-  AM_YUNI: 'yuni.kartika@telkom.co.id',
-  BUD: 'ahmad.yani@telkom.co.id',
-  BUD_DEWI: 'dewi.lestari@telkom.co.id',
-  SDA: 'rian.wijaya@telkom.co.id',
-  SDA_ARIEF: 'arief.rahman@telkom.co.id',
-  LEGAL: 'indra.hermawan@telkom.co.id',
-  LEGAL_RIANA: 'riana.indah@telkom.co.id',
-  MANAGER: 'heru.wibowo@telkom.co.id'
-};
-
-const getCustodianEmail = (name) => {
-  if (!name) return 'support@telkom.co.id';
-  const clean = name.toLowerCase();
-  if (clean.includes('budi')) return 'budi.santoso@telkom.co.id';
-  if (clean.includes('siti')) return 'siti.aminah@telkom.co.id';
-  if (clean.includes('yuni')) return 'yuni.kartika@telkom.co.id';
-  if (clean.includes('ahmad')) return 'ahmad.yani@telkom.co.id';
-  if (clean.includes('dewi')) return 'dewi.lestari@telkom.co.id';
-  if (clean.includes('rian')) return 'rian.wijaya@telkom.co.id';
-  if (clean.includes('arief')) return 'arief.rahman@telkom.co.id';
-  if (clean.includes('indra')) return 'indra.hermawan@telkom.co.id';
-  if (clean.includes('riana')) return 'riana.indah@telkom.co.id';
-  if (clean.includes('heru')) return 'heru.wibowo@telkom.co.id';
-  return 'support@telkom.co.id';
-};
-
-const getRoleFromEmail = (email) => {
-  if (!email) return 'AM';
-  const clean = email.toLowerCase();
-  if (clean === 'budi.santoso@telkom.co.id') return 'AM';
-  if (clean === 'siti.aminah@telkom.co.id') return 'AM_SITI';
-  if (clean === 'yuni.kartika@telkom.co.id') return 'AM_YUNI';
-  if (clean === 'ahmad.yani@telkom.co.id') return 'BUD';
-  if (clean === 'dewi.lestari@telkom.co.id') return 'BUD_DEWI';
-  if (clean === 'rian.wijaya@telkom.co.id') return 'SDA';
-  if (clean === 'arief.rahman@telkom.co.id') return 'SDA_ARIEF';
-  if (clean === 'indra.hermawan@telkom.co.id') return 'LEGAL';
-  if (clean === 'riana.indah@telkom.co.id') return 'LEGAL_RIANA';
-  if (clean === 'heru.wibowo@telkom.co.id') return 'MANAGER';
-  return 'AM';
-};
 
 export default function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -152,7 +106,6 @@ export default function App() {
     setCurrentUserRole(role);
     
     // Simulate push alert warning
-    const user = USERS_ROLE[role];
     setTimeout(() => {
       const myTasksCount = projects.filter((p) => {
         const basoDoc = p.documents.find((d) => d.code === 'BASO');
@@ -162,12 +115,12 @@ export default function App() {
         const activeDoc = p.documents.find((d) => d.code === p.currentStep);
         if (!activeDoc || activeDoc.status === 'Approved') return false;
 
-        return p.custodian && p.custodian.name === user.name;
+        return p.custodian && loggedInUser && p.custodian.email === loggedInUser.email;
       }).length;
 
-      if (myTasksCount > 0 && !role.startsWith('MANAGER')) {
+      if (myTasksCount > 0 && role !== 'MANAGER') {
         setToastMessage(`🔔 Pengingat: Anda memiliki ${myTasksCount} tugas aktif yang tertunda!`);
-      } else if (role.startsWith('MANAGER')) {
+      } else if (role === 'MANAGER') {
         const overdueCount = projects.filter((p) => {
           const basoDoc = p.documents.find((d) => d.code === 'BASO');
           const isCompleted = basoDoc && basoDoc.status === 'Approved';
@@ -186,7 +139,7 @@ export default function App() {
   };
 
   const handleLoginSuccess = (userData) => {
-    const roleCode = getRoleFromEmail(userData.email);
+    const roleCode = userData.role;
     setCurrentUserRole(roleCode);
     setLoggedInUser(userData);
     localStorage.setItem("r_edt_logged_in_user", JSON.stringify(userData));
@@ -203,20 +156,20 @@ export default function App() {
   };
 
   // Helper values
-  const currentUser = USERS_ROLE[currentUserRole] || USERS_ROLE.AM;
+  const currentUser = loggedInUser;
 
   // 4. Create New Project (POST to backend API)
   const handleCreateProject = async ({ name, client, value }) => {
-    const actorEmail = ROLE_EMAILS[currentUserRole] || ROLE_EMAILS.AM;
+    const actorEmail = loggedInUser.email;
 
     const payload = {
       title: name,
       client_name: client,
       contract_value: value,
       account_manager_email: actorEmail,
-      bud_officer_email: ROLE_EMAILS.BUD,
-      sda_officer_email: ROLE_EMAILS.SDA,
-      legal_officer_email: ROLE_EMAILS.LEGAL,
+      bud_officer_email: 'ahmad.yani@telkom.co.id',
+      sda_officer_email: 'rian.wijaya@telkom.co.id',
+      legal_officer_email: 'indra.hermawan@telkom.co.id',
       notes: `Inisiasi proyek baru lewat dashboard antarmuka React.`
     };
 
@@ -248,7 +201,7 @@ export default function App() {
 
   // 5. Document Action: POST /tracker/projects/{code}/review
   const handleDocumentAction = async (projectCode, docCode, action) => {
-    const actorEmail = ROLE_EMAILS[currentUserRole] || ROLE_EMAILS.AM;
+    const actorEmail = loggedInUser.email;
     let decisionCode = 'approve';
     let responseText = 'oke, sudah review';
 
@@ -488,7 +441,7 @@ export default function App() {
                             criticalAlerts.map((item) => {
                               const p = item.project;
                               const activeDoc = p.documents.find((d) => d.code === p.currentStep) || { name: p.currentStep };
-                              const email = getCustodianEmail(p.custodian?.name);
+                              const email = p.custodian?.email;
                               const nudgeMsg = `Halo ${p.custodian?.name}, mohon tindak lanjut untuk berkas "${activeDoc.name}" pada proyek "${p.name}" (${p.client}) yang saat ini sedang tertahan. Terima kasih!`;
                               const teamsLink = `https://teams.microsoft.com/l/chat/0/0?users=${email}&message=${encodeURIComponent(nudgeMsg)}`;
                               
@@ -590,7 +543,7 @@ export default function App() {
               {activeScreen === 'projects' && (
                 <ProjectTable
                   projects={projects}
-                  currentUserRole={currentUserRole}
+                  loggedInUser={loggedInUser}
                   onSelectProject={(id) => {
                     window.location.hash = `#details/${id}`;
                   }}
@@ -609,6 +562,7 @@ export default function App() {
                   ) : (
                     <ProjectDetail
                       project={activeProject}
+                      loggedInUser={loggedInUser}
                       currentUserRole={currentUserRole}
                       onBack={() => {
                         window.location.hash = '#projects';
@@ -641,7 +595,7 @@ export default function App() {
       <ProjectFormModal
         isOpen={isProjectFormOpen}
         onClose={() => setIsProjectFormOpen(false)}
-        currentUserRole={currentUserRole}
+        loggedInUser={loggedInUser}
         onCreateProject={handleCreateProject}
       />
 

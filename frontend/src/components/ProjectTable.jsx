@@ -1,13 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { USERS_ROLE } from '../utils/mockData';
 
-export default function ProjectTable({ projects, currentUserRole, onSelectProject }) {
+export default function ProjectTable({ projects, loggedInUser, onSelectProject }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterMode, setActiveFilterMode] = useState('all'); // 'all' | 'my-tasks'
   const [phaseFilter, setPhaseFilter] = useState('all');
   const [slaFilter, setSlaFilter] = useState('all');
 
-  const currentUser = USERS_ROLE[currentUserRole] || USERS_ROLE.AM;
   const now = new Date();
 
   // Hitung jumlah proyek "Tugas Saya"
@@ -20,9 +18,9 @@ export default function ProjectTable({ projects, currentUserRole, onSelectProjec
       const activeDoc = p.documents.find((d) => d.code === p.currentStep);
       const isDocPending = activeDoc && activeDoc.status !== 'Approved';
 
-      return isDocPending && p.custodian && p.custodian.name === currentUser.name;
+      return isDocPending && p.custodian && loggedInUser && p.custodian.email === loggedInUser.email;
     }).length;
-  }, [projects, currentUser.name]);
+  }, [projects, loggedInUser]);
 
   // Filter Proyek
   const filteredProjects = useMemo(() => {
@@ -63,24 +61,12 @@ export default function ProjectTable({ projects, currentUserRole, onSelectProjec
       if (activeFilterMode === 'my-tasks') {
         const activeDoc = p.documents.find((d) => d.code === p.currentStep);
         const isDocPending = activeDoc && activeDoc.status !== 'Approved';
-        matchMyTasks = !isCompleted && isDocPending && p.custodian && p.custodian.name === currentUser.name;
+        matchMyTasks = !isCompleted && isDocPending && p.custodian && loggedInUser && p.custodian.email === loggedInUser.email;
       }
 
       return matchSearch && matchPhase && matchSla && matchMyTasks;
     });
-  }, [projects, searchQuery, phaseFilter, slaFilter, activeFilterMode, currentUser.name]);
-
-  const getCustodianEmail = (name) => {
-    if (!name) return 'support@telkom.co.id';
-    const cleanName = name
-      .toLowerCase()
-      .replace(/, s\.h\./g, '')
-      .replace(/, m\.b\.a\./g, '')
-      .replace(/\./g, '')
-      .trim()
-      .replace(/\s+/g, '.');
-    return `${cleanName}@telkom.co.id`;
-  };
+  }, [projects, searchQuery, phaseFilter, slaFilter, activeFilterMode, loggedInUser]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('id-ID', {
@@ -233,7 +219,7 @@ export default function ProjectTable({ projects, currentUserRole, onSelectProjec
                 }
 
                 const activeDoc = p.documents.find((d) => d.code === p.currentStep) || { code: p.currentStep, name: p.currentStep };
-                const email = getCustodianEmail(p.custodian.name);
+                const email = p.custodian?.email;
                 const nudgeMsg = `Halo ${p.custodian.name}, mohon tindak lanjut untuk berkas "${activeDoc.name}" pada proyek "${p.name}" (${p.client}) yang saat ini sedang tertahan. Terima kasih!`;
                 const teamsLink = `https://teams.microsoft.com/l/chat/0/0?users=${email}&message=${encodeURIComponent(nudgeMsg)}`;
 

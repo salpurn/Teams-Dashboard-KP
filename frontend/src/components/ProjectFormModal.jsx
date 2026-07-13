@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { USERS_ROLE } from '../utils/mockData';
 
-export default function ProjectFormModal({ isOpen, onClose, currentUserRole, onCreateProject }) {
+export default function ProjectFormModal({ isOpen, onClose, loggedInUser, onCreateProject }) {
   const [projectName, setProjectName] = useState('');
   const [clientName, setClientName] = useState('');
   const [projectValue, setProjectValue] = useState('');
-
-  const currentUser = USERS_ROLE[currentUserRole] || USERS_ROLE.AM;
 
   if (!isOpen) return null;
 
@@ -83,7 +80,7 @@ export default function ProjectFormModal({ isOpen, onClose, currentUserRole, onC
                 type="text"
                 id="form-am-name"
                 className="form-control"
-                value={currentUser.name}
+                value={loggedInUser ? loggedInUser.display_name : ''}
                 readOnly
               />
             </div>

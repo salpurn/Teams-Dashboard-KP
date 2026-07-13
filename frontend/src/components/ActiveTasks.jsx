@@ -25,6 +25,7 @@ export default function ActiveTasks({ projects, currentUser, onSelectProject }) 
         name: custodian.name,
         role: custodian.role,
         avatar: custodian.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
+        email: custodian.email,
         tasks: []
       };
     }
@@ -59,8 +60,8 @@ export default function ActiveTasks({ projects, currentUser, onSelectProject }) 
   const custodiansWithTasks = Object.values(tasksByCustodian);
 
   // Cari tugas milik user aktif
-  const myTasksData = custodiansWithTasks.find((c) => currentUser && c.name === currentUser.name);
-  const teamTasksData = custodiansWithTasks.filter((c) => !currentUser || c.name !== currentUser.name);
+  const myTasksData = custodiansWithTasks.find((c) => currentUser && c.email === currentUser.email);
+  const teamTasksData = custodiansWithTasks.filter((c) => !currentUser || c.email !== currentUser.email);
 
   // Urutkan rekan tim agar overdue/red teratas, disusul jam tertahan terlama
   teamTasksData.sort((a, b) => {
