@@ -1,11 +1,8 @@
 from functools import lru_cache
 from pathlib import Path
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# app/core/config.py -> parents[2] = backend/, terlepas dari cwd tempat uvicorn/skrip dijalankan.
 BASE_DIR = Path(__file__).resolve().parents[2]
-
 
 class Settings(BaseSettings):
     app_name: str = "Teams Document Tracker"
@@ -18,8 +15,8 @@ class Settings(BaseSettings):
     ms_webhook_client_state: str = "change-me"
     ms_team_id: str | None = None
     ms_channel_id: str | None = None
-    fcm_server_key: str | None = None
-    fcm_api_url: str = "https://fcm.googleapis.com/fcm/send"
+    firebase_project_id: str | None = None
+    firebase_service_account_file: str = str(BASE_DIR / "firebase-service-account.json")
     model_config = SettingsConfigDict(env_file=str(BASE_DIR / ".env"), env_file_encoding="utf-8")
 
 @lru_cache

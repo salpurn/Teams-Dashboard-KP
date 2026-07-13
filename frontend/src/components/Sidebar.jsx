@@ -2,34 +2,11 @@ import React from 'react';
 import telkomLogo from '../assets/telkom_logo.png';
 import telkomSymbol from '../assets/telkom_symbol.png';
 
-export default function Sidebar({ loggedInUser, onLogout, activeScreen, setActiveScreen, isCollapsed, onToggleCollapse }) {
+export default function Sidebar({ loggedInUser, avatar, onLogout, activeScreen, setActiveScreen, isCollapsed, onToggleCollapse }) {
   const navItems = [
     { id: 'dashboard', name: 'Dasbor Ringkasan', iconPath: 'M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM14 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z' },
     { id: 'projects', name: 'Daftar Proyek B2B', iconPath: 'M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-1 11H5c-.55 0-1-.45-1-1V8c0-.55.45-1 1-1h14c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1z' }
   ];
-
-  const [avatar, setAvatar] = React.useState('');
-
-  const defaultAvatar = loggedInUser
-    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(loggedInUser.display_name)}&background=e61c24&color=fff&bold=true`
-    : '';
-
-  const updateAvatar = React.useCallback(() => {
-    if (!loggedInUser) return;
-    const savedAvatar = localStorage.getItem(`r_edt_user_avatar_${loggedInUser.email}`);
-    if (savedAvatar) {
-      setAvatar(savedAvatar);
-    } else {
-      setAvatar(defaultAvatar);
-    }
-  }, [loggedInUser, defaultAvatar]);
-
-  React.useEffect(() => {
-    updateAvatar();
-
-    window.addEventListener('avatar-changed', updateAvatar);
-    return () => window.removeEventListener('avatar-changed', updateAvatar);
-  }, [updateAvatar]);
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} style={{ width: isCollapsed ? '80px' : '260px', padding: isCollapsed ? '24px 12px' : '24px', transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>

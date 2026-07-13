@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { STAGE_FLOW } from '../utils/mockData';
 
-export default function ProjectDetail({ project, loggedInUser, currentUserRole, onBack, onDocumentAction, onUploadDocument, openFilePicker }) {
+export default function ProjectDetail({ project, loggedInUser, myAvatar, currentUserRole, onBack, onDocumentAction, onUploadDocument, openFilePicker }) {
   const [selectedPhase, setSelectedPhase] = useState(project.currentPhase);
   const [selectedDocCode, setSelectedDocCode] = useState(project.currentStep);
   const [zoom, setZoom] = useState(100);
@@ -581,7 +581,11 @@ export default function ProjectDetail({ project, loggedInUser, currentUserRole, 
         <div className="details-right-col">
           <div className="glass-card custodian-card">
             <div className="custodian-title">Pemegang Dokumen Saat Ini</div>
-            <img src={project.custodian?.avatar || ''} alt="Custodian Profile" className="custodian-avatar" />
+            <img
+              src={(loggedInUser && project.custodian?.email === loggedInUser.email && myAvatar) || project.custodian?.avatar || ''}
+              alt="Custodian Profile"
+              className="custodian-avatar"
+            />
             <div className="custodian-name">{project.custodian?.name || 'Tidak Ada'}</div>
             <div className="custodian-role">{project.custodian?.role || ''}</div>
             <div className="custodian-dept">{project.custodian?.dept || ''}</div>

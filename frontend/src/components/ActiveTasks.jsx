@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ActiveTasks({ projects, currentUser, onSelectProject }) {
+export default function ActiveTasks({ projects, currentUser, myAvatar, onSelectProject }) {
   const tasksByCustodian = {};
   const now = new Date();
 
@@ -21,10 +21,12 @@ export default function ActiveTasks({ projects, currentUser, onSelectProject }) 
     if (!custodian || !custodian.name) return;
 
     if (!tasksByCustodian[custodian.name]) {
+      // Kustodian yang sama dengan user login: pakai foto profil lokal, bukan avatar inisial dari backend
+      const isCurrentUser = currentUser && custodian.email === currentUser.email;
       tasksByCustodian[custodian.name] = {
         name: custodian.name,
         role: custodian.role,
-        avatar: custodian.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
+        avatar: (isCurrentUser && myAvatar) || custodian.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
         email: custodian.email,
         tasks: []
       };

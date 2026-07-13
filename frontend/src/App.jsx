@@ -9,11 +9,18 @@ import FilePickerModals from './components/FilePickerModals';
 import Toast from './components/Toast';
 import Login from './components/Login';
 import ProfilePage from './components/ProfilePage';
+import { listenForegroundMessages } from './firebase';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
+const getDefaultAvatar = (user) =>
+  user
+    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.display_name)}&background=e61c24&color=fff&bold=true`
+    : '';
+
 export default function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
+  const [userAvatar, setUserAvatar] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState('AM');
   const [activeScreen, setActiveScreen] = useState('dashboard');
   const [activeProjectId, setActiveProjectId] = useState(null);
@@ -43,7 +50,7 @@ export default function App() {
       setProjects(data);
     } catch (err) {
       console.error('Error fetching projects:', err);
-      setToastMessage('⚠️ Gagal terhubung ke backend FastAPI. Pastikan server BE menyala di port 8000.');
+      setToastMessage('Gagal terhubung ke backend FastAPI. Pastikan server BE menyala di port 8000.');
     } finally {
       setIsLoadingProjects(false);
     }
@@ -132,7 +139,7 @@ export default function App() {
         }).length;
 
         if (overdueCount > 0) {
-          setToastMessage(`⚠️ Perhatian Manager: ${overdueCount} proyek mengalami Overdue SLA!`);
+          setToastMessage(`Perhatian Manager: ${overdueCount} proyek mengalami Overdue SLA!`);
         }
       }
     }, 400);
@@ -154,6 +161,49 @@ export default function App() {
     localStorage.removeItem("r_legs_current_user_role");
     window.location.hash = '#dashboard';
   };
+
+  // Avatar: satu sumber data yang dipakai bareng oleh Sidebar & ProfilePage
+  useEffect(() => {
+    if (!loggedInUser) {
+      setUserAvatar('');
+      return;
+    }
+    const saved = localStorage.getItem(`r_edt_user_avatar_${loggedInUser.email}`);
+    setUserAvatar(saved || getDefaultAvatar(loggedInUser));
+  }, [loggedInUser]);
+
+  const handleAvatarChange = (dataUrl) => {
+    if (!loggedInUser) return;
+    try {
+      localStorage.setItem(`r_edt_user_avatar_${loggedInUser.email}`, dataUrl);
+    } catch (err) {
+      console.error('Gagal menyimpan foto profil:', err);
+      setToastMessage('Foto terlalu besar untuk disimpan. Gunakan foto dengan ukuran lebih kecil.');
+      return;
+    }
+    setUserAvatar(dataUrl);
+  };
+
+  const handleAvatarReset = () => {
+    if (!loggedInUser) return;
+    localStorage.removeItem(`r_edt_user_avatar_${loggedInUser.email}`);
+    setUserAvatar(getDefaultAvatar(loggedInUser));
+  };
+
+  // Tampilkan push notification yang masuk selagi tab dashboard sedang dibuka (foreground)
+  useEffect(() => {
+    if (!loggedInUser) return undefined;
+    let unsubscribe;
+    listenForegroundMessages(({ title, body }) => {
+      setToastMessage(`${title || 'Notifikasi'}: ${body || ''}`);
+      if (Notification.permission === 'granted') {
+        new Notification(title || 'TR3-LEGS Tracker', { body: body || '', icon: '/favicon.svg' });
+      }
+    }).then((unsub) => {
+      unsubscribe = unsub;
+    });
+    return () => unsubscribe && unsubscribe();
+  }, [loggedInUser]);
 
   // Helper values
   const currentUser = loggedInUser;
@@ -348,6 +398,7 @@ export default function App() {
       {/* 1. Sidebar */}
       <Sidebar
         loggedInUser={loggedInUser}
+        avatar={userAvatar}
         onLogout={handleLogout}
         activeScreen={activeScreen}
         setActiveScreen={setActiveScreen}
@@ -410,6 +461,7 @@ export default function App() {
                   <ActiveTasks
                     projects={projects}
                     currentUser={currentUser}
+                    myAvatar={userAvatar}
                     onSelectProject={(id) => {
                       window.location.hash = `#details/${id}`;
                     }}
@@ -563,6 +615,7 @@ export default function App() {
                     <ProjectDetail
                       project={activeProject}
                       loggedInUser={loggedInUser}
+                      myAvatar={userAvatar}
                       currentUserRole={currentUserRole}
                       onBack={() => {
                         window.location.hash = '#projects';
@@ -581,6 +634,10 @@ export default function App() {
               {activeScreen === 'profile' && (
                 <ProfilePage
                   loggedInUser={loggedInUser}
+                  avatar={userAvatar}
+                  apiBaseUrl={API_BASE_URL}
+                  onAvatarChange={handleAvatarChange}
+                  onAvatarReset={handleAvatarReset}
                   onBack={() => {
                     window.location.hash = '#dashboard';
                   }}

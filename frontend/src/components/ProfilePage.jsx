@@ -1,40 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { enableDeviceNotifications } from '../firebase';
 
-export default function ProfilePage({ loggedInUser, onBack }) {
-  const [avatar, setAvatar] = useState('');
+export default function ProfilePage({ loggedInUser, avatar, onAvatarChange, onAvatarReset, onBack, apiBaseUrl }) {
+  const hasCustomAvatar = avatar.startsWith('data:');
+  const [notifState, setNotifState] = useState('idle'); // idle | loading | success | error
+  const [notifError, setNotifError] = useState('');
 
-  const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(loggedInUser.display_name)}&background=e61c24&color=fff&bold=true&size=128`;
-
-  // Load avatar from localStorage on mount
-  useEffect(() => {
-    const savedAvatar = localStorage.getItem(`r_edt_user_avatar_${loggedInUser.email}`);
-    if (savedAvatar) {
-      setAvatar(savedAvatar);
-    } else {
-      setAvatar(defaultAvatar);
+  const handleEnableNotifications = async () => {
+    setNotifState('loading');
+    setNotifError('');
+    try {
+      await enableDeviceNotifications(apiBaseUrl, loggedInUser.email);
+      setNotifState('success');
+    } catch (err) {
+      setNotifState('error');
+      setNotifError(err.message || 'Gagal mengaktifkan notifikasi.');
     }
-  }, [loggedInUser.email, defaultAvatar]);
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result;
-        localStorage.setItem(`r_edt_user_avatar_${loggedInUser.email}`, base64String);
-        setAvatar(base64String);
-
-        // Force a custom event to notify Sidebar (and any other profile picture consumers) to refresh the avatar!
-        window.dispatchEvent(new Event('avatar-changed'));
+        onAvatarChange(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleResetAvatar = () => {
-    localStorage.removeItem(`r_edt_user_avatar_${loggedInUser.email}`);
-    setAvatar(defaultAvatar);
-    window.dispatchEvent(new Event('avatar-changed'));
+    onAvatarReset();
   };
 
   return (
@@ -138,7 +134,7 @@ export default function ProfilePage({ loggedInUser, onBack }) {
           >
             Unggah Foto
           </label>
-          {avatar !== defaultAvatar && (
+          {hasCustomAvatar && (
             <button
               onClick={handleResetAvatar}
               className="btn"
@@ -183,6 +179,36 @@ export default function ProfilePage({ loggedInUser, onBack }) {
           <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted-text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unit Kerja / Departemen</span>
           <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--dark-text)' }}>{loggedInUser.unit || loggedInUser.department || 'Large Enterprise & Government Service'}</span>
         </div>
+      </div>
+
+      {/* Notifikasi Perangkat */}
+      <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted-text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Notifikasi Perangkat</span>
+        <p style={{ margin: '4px 0 12px', fontSize: '0.8rem', color: 'var(--muted-text)' }}>
+          Aktifkan supaya dapat notifikasi push langsung di browser ini saat ada dokumen yang perlu ditindak.
+        </p>
+        <button
+          onClick={handleEnableNotifications}
+          disabled={notifState === 'loading' || notifState === 'success'}
+          className="btn"
+          style={{
+            padding: '6px 14px',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            background: notifState === 'success' ? '#dcfce7' : 'var(--telkom-red)',
+            color: notifState === 'success' ? '#15803d' : '#ffffff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: notifState === 'loading' || notifState === 'success' ? 'default' : 'pointer'
+          }}
+        >
+          {notifState === 'loading' && 'Mengaktifkan...'}
+          {notifState === 'success' && 'Notifikasi Aktif ✓'}
+          {(notifState === 'idle' || notifState === 'error') && 'Aktifkan Notifikasi'}
+        </button>
+        {notifState === 'error' && (
+          <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{notifError}</p>
+        )}
       </div>
     </div>
   );
