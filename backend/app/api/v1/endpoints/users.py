@@ -1,10 +1,11 @@
+import hashlib
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.schemas.user import UserCreate, UserRead, UserUpdate, UserLogin
 
 router = APIRouter()
 
@@ -57,4 +58,29 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
         setattr(user, key, value)
     db.commit()
     db.refresh(user)
+    return user
+
+
+@router.post("/login", response_model=UserRead)
+def login_user(payload: UserLogin, db: Session = Depends(get_db)) -> User:
+    user = db.scalar(select(User).where(User.email == str(payload.email).lower()))
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email atau password salah",
+        )
+    
+    hashed_input = hashlib.sha256(payload.password.encode()).hexdigest()
+    if user.hashed_password != hashed_input:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email atau password salah",
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Akun Anda dinonaktifkan",
+        )
+        
     return user

@@ -1,5 +1,6 @@
 """Seed data — diselaraskan dengan USERS_ROLE & sample project di mockData.js (r-legs-tracking)."""
 
+import hashlib
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -10,7 +11,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from app.core.funnel import FUNNEL_STEP_BY_CODE, primary_role_for_step
 from app.db.session import Base, SessionLocal, engine
-from app.models import AuditEvent, Project, ProjectStep, SystemSetting, User
+from app.models import AuditEvent, Project, ProjectStep, SystemSetting, User, AvailableFile
 from app.models.enums import DocumentStatus, FunnelStepCode, ProjectStatus, ReviewDecision, UserRole
 
 SLA_DEFAULT_HOURS = 48
@@ -213,13 +214,15 @@ SEED_PROJECTS = [
 
 def _seed_users(db) -> dict[str, User]:
     users: dict[str, User] = {}
+    hashed = hashlib.sha256(b"telkom123").hexdigest()
     for item in SEED_USERS:
         existing = db.query(User).filter(User.email == item["email"]).first()
         if not existing:
-            existing = User(**item)
+            existing = User(**item, hashed_password=hashed)
             db.add(existing)
         else:
             existing.role = item["role"]
+            existing.hashed_password = hashed
         users[item["email"]] = existing
     db.flush()
     return users
@@ -370,12 +373,164 @@ def _label_for(users: dict[str, User], user_id: int | None) -> str | None:
     return None
 
 
+from sqlalchemy import select
+
+SEED_AVAILABLE_FILES = [
+    # Teams Channel Files
+    {
+        "name": "justkeb_p1_final_signed.pdf",
+        "size": "1.5 MB",
+        "date": "Hari ini, 09:30",
+        "file_type": "pdf",
+        "source": "teams",
+        "category": "AM B2B Regional IV"
+    },
+    {
+        "name": "draf_perjanjian_b2b_rlegs_semarang.pdf",
+        "size": "4.2 MB",
+        "date": "14 Jun 2026",
+        "file_type": "pdf",
+        "source": "teams",
+        "category": "AM B2B Regional IV"
+    },
+    {
+        "name": "KL_Draft_Final_Verified.docx",
+        "size": "1.8 MB",
+        "date": "Kemarin, 16:45",
+        "file_type": "docx",
+        "source": "teams",
+        "category": "Legal & Compliance"
+    },
+    {
+        "name": "Catatan_Koreksi_Legalitas_Kemitraan.docx",
+        "size": "420 KB",
+        "date": "12 Jun 2026",
+        "file_type": "docx",
+        "source": "teams",
+        "category": "Legal & Compliance"
+    },
+    {
+        "name": "PA_SmartCity_Semarang_Approved.pdf",
+        "size": "3.1 MB",
+        "date": "Hari ini, 08:15",
+        "file_type": "pdf",
+        "source": "teams",
+        "category": "SDA Assurance Team"
+    },
+    {
+        "name": "assessment_teknis_cctv_iot.pdf",
+        "size": "2.9 MB",
+        "date": "11 Jun 2026",
+        "file_type": "pdf",
+        "source": "teams",
+        "category": "SDA Assurance Team"
+    },
+    {
+        "name": "data_justkeb_harga_boq_rab_approved.xlsx",
+        "size": "850 KB",
+        "date": "12 Jun 2026",
+        "file_type": "xlsx",
+        "source": "teams",
+        "category": "General Witel NT"
+    },
+    {
+        "name": "Katalog_Layanan_Telkom_2026.pdf",
+        "size": "5.4 MB",
+        "date": "05 Jun 2026",
+        "file_type": "pdf",
+        "source": "teams",
+        "category": "General Witel NT"
+    },
+    # Local Files
+    {
+        "name": "BOQ_Internal_Semarang_v2.xlsx",
+        "size": "1.2 MB",
+        "date": "Kemarin, 11:30",
+        "file_type": "xlsx",
+        "source": "local",
+        "category": "Downloads"
+    },
+    {
+        "name": "Nomor_Validasi_OBL.pdf",
+        "size": "450 KB",
+        "date": "10 Jun 2026",
+        "file_type": "pdf",
+        "source": "local",
+        "category": "Downloads"
+    },
+    {
+        "name": "P1_Justifikasi_Kebutuhan_Internal.docx",
+        "size": "1.4 MB",
+        "date": "Kemarin, 17:00",
+        "file_type": "docx",
+        "source": "local",
+        "category": "My Documents"
+    },
+    {
+        "name": "Template_BASO_Telkom.docx",
+        "size": "900 KB",
+        "date": "12 Jun 2026",
+        "file_type": "docx",
+        "source": "local",
+        "category": "My Documents"
+    },
+    {
+        "name": "Nota_Dinas_Persetujuan_Principle.pdf",
+        "size": "1.8 MB",
+        "date": "08 Jun 2026",
+        "file_type": "pdf",
+        "source": "local",
+        "category": "My Documents"
+    },
+    {
+        "name": "Draf_Kontrak_Regional_IV.pdf",
+        "size": "3.8 MB",
+        "date": "Hari ini, 07:45",
+        "file_type": "pdf",
+        "source": "local",
+        "category": "Desktop"
+    },
+    {
+        "name": "File_Revisi_Segera_Kirim.pdf",
+        "size": "2.5 MB",
+        "date": "Kemarin, 16:50",
+        "file_type": "pdf",
+        "source": "local",
+        "category": "Desktop"
+    },
+    {
+        "name": "Catatan_Meeting_Nego_Semarang.docx",
+        "size": "220 KB",
+        "date": "13 Jun 2026",
+        "file_type": "docx",
+        "source": "local",
+        "category": "Desktop"
+    }
+]
+
+def _seed_available_files(db: SessionLocal) -> None:
+    statement = select(AvailableFile)
+    if db.scalars(statement).first():
+        return
+    for f in SEED_AVAILABLE_FILES:
+        db.add(
+            AvailableFile(
+                name=f["name"],
+                size=f["size"],
+                date=f["date"],
+                file_type=f["file_type"],
+                source=f["source"],
+                category=f["category"]
+            )
+        )
+
 def main() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         users = _seed_users(db)
         _seed_settings(db)
+        _seed_available_files(db)
         for spec in SEED_PROJECTS:
             _seed_project(db, spec, users)
         db.commit()

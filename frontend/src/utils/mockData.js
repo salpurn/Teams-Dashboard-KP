@@ -1,7 +1,7 @@
 // Mock Data Awal untuk R-LEGS Enterprise Document Tracking Dashboard (R-EDT)
 // Berisi data simulasi proyek B2B Telkom Indonesia, dengan SLA dan log audit yang realistis.
 
-const INITIAL_PROJECTS = [
+export const INITIAL_PROJECTS = [
   {
     id: "PRJ-2026-001",
     name: "Pengembangan Infrastructure Smart City & CCTV IoT",
@@ -707,7 +707,7 @@ const INITIAL_PROJECTS = [
   }
 ];
 
-const STAGE_FLOW = [
+export const STAGE_FLOW = [
   { phase: "F0", name: "Lead", desc: "Pendataan Awal Peluang Bisnis", steps: [] },
   { phase: "F1", name: "Opportunity", desc: "Penyaringan & Kualifikasi Proyek", steps: [] },
   {
@@ -736,7 +736,7 @@ const STAGE_FLOW = [
   }
 ];
 
-const USERS_ROLE = {
+export const USERS_ROLE = {
   AM: {
     username: "AM-Budi",
     name: "Budi Santoso",

@@ -150,3 +150,15 @@ class TestPushNotificationCreate(BaseModel):
     title: str = Field(min_length=1, max_length=180)
     body: str = Field(min_length=1, max_length=1000)
     data: dict[str, str] = Field(default_factory=dict)
+
+
+class AvailableFileSchema(BaseModel):
+    id: int
+    name: str
+    size: str
+    date: str
+    file_type: str
+    source: str
+    category: str
+
+    model_config = ConfigDict(from_attributes=True)

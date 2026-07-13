@@ -28,7 +28,7 @@
   
   /* Typography */
   --font-body: 'Inter', sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-heading: 'Inter', sans-serif;
   
   /* Gradients */
   --grad-primary: linear-gradient(135deg, #e61c24 0%, #c9141b 100%); /* Gradien Merah */
@@ -141,20 +141,20 @@ h1, h2, h3, h4, h5, h6 {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 10px 14px;
   border-radius: 8px;
   color: var(--muted-text);
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
 
 .nav-item svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   fill: currentColor;
 }
 
@@ -1855,59 +1855,6 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 1024px) {
   body {
     flex-direction: row; /* Tetap pertahankan bilah sisi di kiri */
-  }
-  .sidebar {
-    width: 80px; /* Ciutkan lebar sidebar */
-    padding: 20px 10px;
-    align-items: center;
-    border-right: 1px solid var(--border-color);
-  }
-  .logo-container {
-    justify-content: center;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    width: 100%;
-  }
-  .logo-text, .logo-sub {
-    display: none; /* Sembunyikan teks logo Telkom */
-  }
-  .nav-links {
-    margin-top: 24px;
-    width: 100%;
-    align-items: center;
-  }
-  .nav-item {
-    justify-content: center;
-    padding: 12px;
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-  }
-  .nav-item span {
-    display: none; /* Sembunyikan label tulisan menu */
-  }
-  .nav-item.active {
-    border-left: 4px solid var(--telkom-red);
-    padding-left: 8px; /* Sesuaikan padding setelah border aktif */
-    background: var(--telkom-blue-glow);
-  }
-  .user-status-card {
-    padding: 10px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    align-items: center;
-    width: 100%;
-  }
-  .user-profile {
-    justify-content: center;
-  }
-  .user-info {
-    display: none; /* Sembunyikan teks profil pengguna */
-  }
-  .user-avatar {
-    width: 40px;
-    height: 40px;
   }
   .main-content {
     height: 100vh;
