@@ -1,13 +1,13 @@
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.funnel import FUNNEL_PHASES, FUNNEL_STEP_BY_CODE
 from app.db.session import get_db
 from app.models.audit import AuditEvent
-from app.models.enums import DocumentStatus, NotificationStatus, ProjectStatus
+from app.models.enums import DocumentStatus, FunnelStepCode, NotificationStatus, ProjectStatus
 from app.models.message import TeamsMessage
 from app.models.notification import DeviceToken, Notification
 from app.models.project import Project, ProjectDocument
@@ -37,6 +37,7 @@ from app.services.tracker_service import (
     register_device_token,
     set_sla_settings,
     submit_review_decision,
+    upload_document,
 )
 
 router = APIRouter()
@@ -233,6 +234,17 @@ def create_device_token(payload: DeviceTokenCreate, db: Session = Depends(get_db
 @router.post("/notifications/test", response_model=NotificationRead, status_code=status.HTTP_201_CREATED)
 def send_test_notification(payload: TestPushNotificationCreate, db: Session = Depends(get_db)) -> Notification:
     return create_test_notification(db, payload)
+
+
+@router.post("/projects/{project_code}/documents", response_model=FeProject, status_code=status.HTTP_201_CREATED)
+def upload_project_document(
+    project_code: str,
+    step_code: FunnelStepCode = Form(...),
+    actor_email: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+) -> FeProject:
+    return upload_document(db, project_code, step_code, actor_email, file)
 
 
 @router.get("/available-files", response_model=list[AvailableFileSchema])

@@ -1,11 +1,8 @@
 from datetime import datetime
-
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.db.session import Base
 from app.models.enums import FunnelPhase, FunnelStepCode, ProjectStatus
-
 
 class Project(Base):
     __tablename__ = "projects"

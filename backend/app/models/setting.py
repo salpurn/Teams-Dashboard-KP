@@ -1,10 +1,7 @@
 from datetime import datetime
-
 from sqlalchemy import DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
-
 from app.db.session import Base
-
 
 class SystemSetting(Base):
     __tablename__ = "system_settings"

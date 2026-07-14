@@ -1,11 +1,14 @@
 import re
+import uuid
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from urllib.parse import quote_plus
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import settings
 from app.core.funnel import (
     FUNNEL_STEP_BY_CODE,
     FUNNEL_STEP_ORDER,
@@ -374,6 +377,81 @@ def submit_review_decision(db: Session, project_code: str, payload: ReviewDecisi
             "step_returned",
             "Dokumen perlu direvisi",
             payload.response_text or f"{project.project_code} butuh revisi di step {current_step.value}.",
+        )
+
+    db.commit()
+    return get_project(db, project.project_code)
+
+
+def upload_document(
+    db: Session,
+    project_code: str,
+    step_code: FunnelStepCode,
+    actor_email: str,
+    file: UploadFile,
+) -> FeProject:
+    project = _fetch_project_orm(db, project_code)
+    actor = get_user_by_email(db, actor_email)
+
+    if project.status != ProjectStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project sudah selesai atau dibatalkan")
+    if project.current_step != step_code:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Step ini bukan step aktif project")
+
+    step_row = next((s for s in project.steps if s.step_code == step_code), None)
+    if step_row is None or step_row.status not in {DocumentStatus.EMPTY, DocumentStatus.REVISION}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Step ini tidak sedang menunggu unggahan berkas",
+        )
+
+    upload_dir = Path(settings.upload_dir)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    original_name = Path(file.filename or "berkas").name
+    stored_name = f"{project_code}_{step_code.value}_{uuid.uuid4().hex[:8]}_{original_name}"
+    with (upload_dir / stored_name).open("wb") as dest:
+        dest.write(file.file.read())
+
+    now = datetime.now(UTC)
+    was_revision = step_row.status == DocumentStatus.REVISION
+
+    db.add(
+        ProjectDocument(
+            project_id=project.id,
+            step_code=step_code,
+            file_name=original_name,
+            content_type=file.content_type,
+            web_url=f"/uploads/{stored_name}",
+            is_primary=True,
+        )
+    )
+
+    sla = get_sla_settings(db)
+    step_row.status = DocumentStatus.PENDING
+    step_row.started_at = now
+    step_row.due_at = now + timedelta(hours=project.sla_limit_hours or sla.default_sla_hours)
+    step_row.first_notified_at = now
+    step_row.overdue_notified_at = None
+    step_row.updated_by_label = f"{actor.display_name} ({actor.role.value})"
+
+    _audit(
+        db,
+        project.id,
+        actor.id,
+        step_row.id,
+        "document_uploaded",
+        "Berkas Diunggah (Revisi)" if was_revision else "Berkas Diunggah",
+        f"{actor.display_name} mengunggah berkas '{original_name}' untuk step {step_code.value}.",
+    )
+    if step_row.custodian_id:
+        _notify(
+            db,
+            step_row.custodian_id,
+            project.id,
+            step_row.id,
+            "document_uploaded",
+            "Berkas baru menunggu review",
+            f"{project.project_code} - berkas untuk step {step_code.value} sudah diunggah, menunggu review Anda.",
         )
 
     db.commit()

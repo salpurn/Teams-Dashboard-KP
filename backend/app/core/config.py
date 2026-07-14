@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     ms_channel_id: str | None = None
     firebase_project_id: str | None = None
     firebase_service_account_file: str = str(BASE_DIR / "firebase-service-account.json")
+    upload_dir: str = str(BASE_DIR / "uploads")
     model_config = SettingsConfigDict(env_file=str(BASE_DIR / ".env"), env_file_encoding="utf-8")
 
 @lru_cache

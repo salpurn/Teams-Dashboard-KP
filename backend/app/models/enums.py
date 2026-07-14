@@ -1,6 +1,5 @@
 from enum import StrEnum
 
-
 class UserRole(StrEnum):
     """Peran hardcoded sesuai role switcher frontend R-EDT (AM/BUD/SDA/LEGAL/MANAGER)."""
 
